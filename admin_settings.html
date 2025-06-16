@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings - SVPCET</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f4f4f4, #e0e7ff);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .settings-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .logo {
+            width: 120px;
+            margin-bottom: 1.5rem;
+        }
+        h1 {
+            color: #003087;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            color: #003087;
+            font-size: 1.4rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .table {
+            margin-bottom: 1.5rem;
+        }
+        .table th {
+            background-color: #003087;
+            color: #ffffff;
+        }
+        .btn-primary {
+            background-color: #003087;
+            border-color: #003087;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #005bb5;
+            border-color: #005bb5;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #218838;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #c82333;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #5a6268;
+        }
+        .error, .success {
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .form-label {
+            color: #003087;
+            font-weight: 600;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <img src="logo.jpg" alt="SVPCET Logo" class="logo mx-auto d-block" style="height: 60px; width: auto;">
+        <h1 class="text-center">Admin Settings</h1>
+
+        <!-- Leave Types -->
+        <h2>Manage Leave Types</h2>
+        <div class="mb-3">
+            <label for="newLeaveType" class="form-label">Add New Leave Type</label>
+            <div class="input-group">
+                <input type="text" id="newLeaveType" class="form-control" placeholder="e.g., Emergency">
+                <button class="btn btn-success" onclick="addLeaveType()">Add</button>
+            </div>
+        </div>
+        <ul id="leaveTypeList" class="list-group mb-3">
+            <!-- Populated dynamically -->
+        </ul>
+
+        <!-- Maximum Leave Days -->
+        <h2>Maximum Leave Days</h2>
+        <div class="mb-3">
+            <label for="maxLeaveDays" class="form-label">Max Days per Semester</label>
+            <input type="number" id="maxLeaveDays" class="form-control" min="1" value="15">
+        </div>
+
+        <!-- Notification Settings -->
+        <h2>Notification Settings</h2>
+        <div class="mb-3">
+            <div class="form-check">
+                <input type="checkbox" id="emailNotifications" class="form-check-input" checked>
+                <label for="emailNotifications" class="form-check-label">Enable Email Notifications</label>
+            </div>
+        </div>
+
+        <!-- Audit Logs -->
+        <h2>Audit Logs</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="auditLogTableBody">
+                <!-- Populated dynamically -->
+            </tbody>
+        </table>
+
+        <button class="btn btn-success w-100 mb-3" onclick="saveSettings()">Save Settings</button>
+        <button class="btn btn-danger w-100 mb-3" onclick="resetSettings()">Reset Settings</button>
+        <div id="success" class="success text-center">Settings saved successfully!</div>
+        <div id="error" class="error text-center">Please fill all required fields.</div>
+        <a href="index.html" class="btn btn-secondary w-100 mt-3">Back to Dashboard</a>
+        <a href="student_teacher_mode.html" class="btn btn-primary w-100 mt-2">Go to Student-Teacher Mode</a>
+    </div>
+
+    <!-- Bootstrap JS and Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample data (replace with backend API call)
+        let settings = {
+            leaveTypes: ['Medical', 'Personal', 'Academic'],
+            maxLeaveDays: 15,
+            emailNotifications: true
+        };
+        const auditLogs = [
+            { timestamp: '2025-05-24 10:00', user: 'Admin User', action: 'Added user U001' },
+            { timestamp: '2025-05-24 11:00', user: 'Admin User', action: 'Approved leave L001' }
+        ];
+
+        function loadSettings() {
+            // Load leave types
+            const leaveTypeList = document.getElementById('leaveTypeList');
+            leaveTypeList.innerHTML = '';
+            settings.leaveTypes.forEach(type => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    ${type}
+                    <button class="btn btn-danger btn-sm" onclick="removeLeaveType('${type}')">Remove</button>
+                `;
+                leaveTypeList.appendChild(li);
+            });
+
+            // Load max leave days
+            document.getElementById('maxLeaveDays').value = settings.maxLeaveDays;
+
+            // Load notification settings
+            document.getElementById('emailNotifications').checked = settings.emailNotifications;
+
+            // Load audit logs
+            const auditLogTableBody = document.getElementById('auditLogTableBody');
+            auditLogTableBody.innerHTML = '';
+            auditLogs.forEach(log => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${log.timestamp}</td>
+                    <td>${log.user}</td>
+                    <td>${log.action}</td>
+                `;
+                auditLogTableBody.appendChild(row);
+            });
+        }
+
+        function addLeaveType() {
+            const newLeaveType = document.getElementById('newLeaveType').value.trim();
+            const success = document.getElementById('success');
+            const error = document.getElementById('error');
+
+            if (newLeaveType && !settings.leaveTypes.includes(newLeaveType)) {
+                settings.leaveTypes.push(newLeaveType);
+                document.getElementById('newLeaveType').value = '';
+                success.style.display = 'block';
+                error.style.display = 'none';
+                loadSettings();
+            } else {
+                error.textContent = 'Please enter a unique leave type.';
+                error.style.display = 'block';
+                success.style.display = 'none';
+            }
+        }
+
+        function removeLeaveType(type) {
+            if (confirm(`Are you sure you want to remove "${type}"?`)) {
+                settings.leaveTypes = settings.leaveTypes.filter(t => t !== type);
+                loadSettings();
+                document.getElementById('success').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+            }
+        }
+
+        function saveSettings() {
+            const maxLeaveDays = document.getElementById('maxLeaveDays').value;
+            const emailNotifications = document.getElementById('emailNotifications').checked;
+            const success = document.getElementById('success');
+            const error = document.getElementById('error');
+
+            if (maxLeaveDays > 0) {
+                // Placeholder for backend API call (e.g., PUT /settings)
+                settings.maxLeaveDays = parseInt(maxLeaveDays);
+                settings.emailNotifications = emailNotifications;
+                success.style.display = 'block';
+                error.style.display = 'none';
+            } else {
+                error.textContent = 'Maximum leave days must be greater than 0.';
+                error.style.display = 'block';
+                success.style.display = 'none';
+            }
+        }
+
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset all settings?')) {
+                // Placeholder for backend API call
+                settings = {
+                    leaveTypes: ['Medical', 'Personal', 'Academic'],
+                    maxLeaveDays: 15,
+                    emailNotifications: true
+                };
+                loadSettings();
+                document.getElementById('success').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+            }
+        }
+
+        // Load settings on page load
+        window.onload = loadSettings;
+    </script>
+</body>
+</html>

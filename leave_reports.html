@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Reports - SVPCET</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f4f4f4, #e0e7ff);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .reports-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            max-width: 900px;
+            width: 100%;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .logo {
+            width: 120px;
+            margin-bottom: 1.5rem;
+        }
+        h1 {
+            color: #003087;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+        .table {
+            margin-bottom: 1.5rem;
+        }
+        .table th {
+            background-color: #003087;
+            color: #ffffff;
+        }
+        .btn-primary {
+            background-color: #003087;
+            border-color: #003087;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #005bb5;
+            border-color: #005bb5;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #218838;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #5a6268;
+        }
+        .error, .success {
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .filter-section {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            color: #003087;
+            font-weight: 600;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="reports-container">
+        <img src="logo.jpg" alt="SVPCET Logo" class="logo mx-auto d-block" style="height: 50px; width: auto;">
+        <h1 class="text-center">Leave Reports</h1>
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="filterDepartment" class="form-label">Department</label>
+                    <select id="filterDepartment" class="form-select">
+                        <option value="">All Departments</option>
+                        <option value="cse">Computer Science</option>
+                        <option value="mech">Mechanical</option>
+                        <option value="elec">Electrical</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filterLeaveType" class="form-label">Leave Type</label>
+                    <select id="filterLeaveType" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="medical">Medical</option>
+                        <option value="personal">Personal</option>
+                        <option value="academic">Academic</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filterDateRange" class="form-label">Date Range</label>
+                    <input type="date" id="filterDateRange" class="form-control">
+                </div>
+            </div>
+            <button class="btn btn-primary mt-3" onclick="applyFilters()">Apply Filters</button>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Leave ID</th>
+                    <th>Student</th>
+                    <th>Department</th>
+                    <th>Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="reportTableBody">
+                <!-- Populated dynamically -->
+            </tbody>
+        </table>
+        <button class="btn btn-success w-100 mb-3" onclick="exportReport()">Export Report</button>
+        <div id="success" class="success text-center">Report exported successfully!</div>
+        <div id="error" class="error text-center">No data available for the selected filters.</div>
+        <a href="index.html" class="btn btn-secondary w-100 mt-3">Back to Dashboard</a>
+        <a href="student_teacher_mode.html" class="btn btn-primary w-100 mt-2">Go to Student-Teacher Mode</a>
+    </div>
+
+    <!-- Bootstrap JS and Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample data (replace with backend API call)
+        const leaves = [
+            { id: 'L001', student: 'John Doe', department: 'cse', type: 'Medical', startDate: '2025-05-20', endDate: '2025-05-22', status: 'Approved' },
+            { id: 'L002', student: 'Jane Smith', department: 'mech', type: 'Personal', startDate: '2025-06-01', endDate: '2025-06-03', status: 'Pending' },
+            { id: 'L003', student: 'Alice Brown', department: 'elec', type: 'Academic', startDate: '2025-06-10', endDate: '2025-06-12', status: 'Rejected' }
+        ];
+
+        function loadReports(filteredLeaves = leaves) {
+            const tableBody = document.getElementById('reportTableBody');
+            tableBody.innerHTML = '';
+            if (filteredLeaves.length === 0) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('success').style.display = 'none';
+                return;
+            }
+            filteredLeaves.forEach(leave => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${leave.id}</td>
+                    <td>${leave.student}</td>
+                    <td>${leave.department.toUpperCase()}</td>
+                    <td>${leave.type}</td>
+                    <td>${leave.startDate}</td>
+                    <td>${leave.endDate}</td>
+                    <td>${leave.status}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function applyFilters() {
+            const department = document.getElementById('filterDepartment').value;
+            const leaveType = document.getElementById('filterLeaveType').value;
+            const dateRange = document.getElementById('filterDateRange').value;
+
+            let filteredLeaves = leaves;
+            if (department) {
+                filteredLeaves = filteredLeaves.filter(leave => leave.department === department);
+            }
+            if (leaveType) {
+                filteredLeaves = filteredLeaves.filter(leave => leave.type === leaveType);
+            }
+            if (dateRange) {
+                filteredLeaves = filteredLeaves.filter(leave => leave.startDate >= dateRange);
+            }
+            loadReports(filteredLeaves);
+        }
+
+        function exportReport() {
+            // Placeholder for backend export (e.g., generate CSV/PDF)
+            document.getElementById('success').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            alert('Exporting report as CSV/PDF (simulated).');
+        }
+
+        // Load data on page load
+        window.onload = () => loadReports();
+    </script>
+</body>
+</html>
